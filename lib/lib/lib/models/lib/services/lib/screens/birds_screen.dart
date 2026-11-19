@@ -1,7 +1,10 @@
 
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+
 import '../models/bird.dart';
 import '../services/storage_service.dart';
 
@@ -26,10 +29,32 @@ class _BirdsScreenState extends State<BirdsScreen> {
   Future<void> loadBirds() async {
     final result = await storage.getBirds();
     if (!mounted) return;
+
     setState(() {
       birds = result;
       loading = false;
     });
+  }
+
+  Future<String?> savePhoto(XFile image) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+
+      final extension = image.name.contains('.')
+          ? image.name.substring(image.name.lastIndexOf('.'))
+          : '.jpg';
+
+      final fileName =
+          '${DateTime.now().microsecondsSinceEpoch}$extension';
+
+      final savedImage = await File(image.path).copy(
+        '${directory.path}/$fileName',
+      );
+
+      return savedImage.path;
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<void> addBird() async {
@@ -50,7 +75,7 @@ class _BirdsScreenState extends State<BirdsScreen> {
         return StatefulBuilder(
           builder: (context, updateDialog) {
             return AlertDialog(
-              title: const Text('Mombamomba ny akoho'),
+              title: const Text('Hanampy akoho vaovao'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -58,75 +83,92 @@ class _BirdsScreenState extends State<BirdsScreen> {
                     TextField(
                       controller: idController,
                       decoration: const InputDecoration(
-                        labelText: 'Laharana / ID',
+                        labelText: 'ID na laharan\'ny akoho',
                       ),
                     ),
                     TextField(
                       controller: nameController,
                       decoration: const InputDecoration(
-                        labelText: 'Anarana',
+                        labelText: 'Anaran\'ny akoho',
                       ),
                     ),
                     TextField(
                       controller: breedController,
                       decoration: const InputDecoration(
-                        labelText: 'Karazana / Race',
+                        labelText: 'Karazana (Race)',
                       ),
                     ),
                     DropdownButtonFormField<String>(
                       value: gender,
                       decoration: const InputDecoration(
-                        labelText: 'Sokajy',
+                        labelText: 'Lahy sa vavy',
                       ),
                       items: const [
                         DropdownMenuItem(
                           value: 'Lahy',
-                          child: Text('Akoho lahy'),
+                          child: Text('Lahy'),
                         ),
                         DropdownMenuItem(
                           value: 'Vavy',
-                          child: Text('Akohovavy'),
+                          child: Text('Vavy'),
                         ),
                       ],
                       onChanged: (value) {
                         if (value != null) {
-                          updateDialog(() => gender = value);
+                          updateDialog(() {
+                            gender = value;
+                          });
                         }
                       },
                     ),
                     const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.calendar_month),
-                      label: Text(
-                        'Daty nahaterahana: '
-                        '${birthDate.day}/${birthDate.month}/${birthDate.year}',
-                      ),
-                      onPressed: () async {
-                        final selected = await showDatePicker(
-                          context: context,
-                          initialDate: birthDate,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime.now(),
-                        );
-                        if (selected != null) {
-                          updateDialog(() => birthDate = selected);
-                        }
-                      },
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Daty nahaterahana: ${birthDate.day}/${birthDate.month}/${birthDate.year}',
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.calendar_month),
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: birthDate,
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now(),
+                            );
+
+                            if (picked != null) {
+                              updateDialog(() {
+                                birthDate = picked;
+                              });
+                            }
+                          },
+                        ),
+                      ],
                     ),
                     TextField(
                       controller: fatherController,
                       decoration: const InputDecoration(
-                        labelText: 'Anaran’ny ray',
+                        labelText: 'ID na anaran\'ny ray',
                       ),
                     ),
                     TextField(
                       controller: motherController,
                       decoration: const InputDecoration(
-                        labelText: 'Anaran’ny reny',
+                        labelText: 'ID na anaran\'ny reny',
                       ),
                     ),
                     const SizedBox(height: 12),
-                    OutlinedButton.icon(
+                    if (photoPath.isNotEmpty)
+                      Image.file(
+                        File(photoPath),
+                        height: 100,
+                        width: 100,
+                        fit: BoxFit.cover,
+                      ),
+                    ElevatedButton.icon(
                       icon: const Icon(Icons.photo_library),
                       label: const Text('Misafidy sary'),
                       onPressed: () async {
@@ -135,26 +177,27 @@ class _BirdsScreenState extends State<BirdsScreen> {
                           source: ImageSource.gallery,
                           imageQuality: 80,
                         );
+
                         if (image != null) {
-                          updateDialog(() {
-                            photoPath = image.path;
-                          });
+                          final savedPath = await savePhoto(image);
+
+                          if (savedPath != null) {
+                            updateDialog(() {
+                              photoPath = savedPath;
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Tsy voatahiry ny sary.'),
+                              ),
+                            );
+                          }
                         }
                       },
                     ),
-                    if (photoPath.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Image.file(
-                          File(photoPath),
-                          height: 100,
-                          width: 100,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
                     TextField(
                       controller: notesController,
-                      maxLines: 3,
+                      maxLines: 2,
                       decoration: const InputDecoration(
                         labelText: 'Fanamarihana',
                       ),
@@ -189,8 +232,11 @@ class _BirdsScreenState extends State<BirdsScreen> {
 
                     await storage.addBird(bird);
 
-                    if (!dialogContext.mounted) return;
-                    Navigator.pop(dialogContext);
+                    if (dialogContext.mounted) {
+                      Navigator.pop(dialogContext);
+                    }
+
+                    await loadBirds();
                   },
                   child: const Text('Tehirizo'),
                 ),
@@ -207,8 +253,6 @@ class _BirdsScreenState extends State<BirdsScreen> {
     fatherController.dispose();
     motherController.dispose();
     notesController.dispose();
-
-    await loadBirds();
   }
 
   @override
@@ -216,8 +260,6 @@ class _BirdsScreenState extends State<BirdsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Fitantanana akoho'),
-        backgroundColor: const Color(0xFF276749),
-        foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: addBird,
@@ -227,7 +269,7 @@ class _BirdsScreenState extends State<BirdsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : birds.isEmpty
               ? const Center(
-                  child: Text('Mbola tsy misy akoho voasoratra.'),
+                  child: Text('Tsy mbola misy akoho voasoratra.'),
                 )
               : ListView.builder(
                   itemCount: birds.length,
@@ -235,7 +277,10 @@ class _BirdsScreenState extends State<BirdsScreen> {
                     final bird = birds[index];
 
                     return Card(
-                      margin: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       child: ListTile(
                         leading: CircleAvatar(
                           radius: 28,
@@ -246,16 +291,14 @@ class _BirdsScreenState extends State<BirdsScreen> {
                                   : null,
                           child: bird.photoPath.isEmpty ||
                                   !File(bird.photoPath).existsSync()
-                              ? const Icon(Icons.flutter_dash)
+                              ? const Icon(Icons.pets)
                               : null,
                         ),
                         title: Text(bird.name),
                         subtitle: Text(
-                          '${bird.id} • ${bird.breed}\n'
-                          '${bird.gender} • '
-                          '${bird.birthDate.day}/'
-                          '${bird.birthDate.month}/'
-                          '${bird.birthDate.year}',
+                          'ID: ${bird.id}\n'
+                          'Race: ${bird.breed}\n'
+                          'Lahy/Vavy: ${bird.gender}',
                         ),
                         isThreeLine: true,
                       ),
