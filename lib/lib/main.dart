@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
+
 import 'screens/birds_screen.dart';
+import 'screens/chicks_screen.dart';
 
 void main() {
   runApp(const RoyalFarmApp());
@@ -12,11 +14,11 @@ class RoyalFarmApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Royal Farm',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF276749),
+          seedColor: Colors.green,
         ),
         useMaterial3: true,
       ),
@@ -28,121 +30,116 @@ class RoyalFarmApp extends StatelessWidget {
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  void openBirds(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const BirdsScreen(),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final menuItems = [
+      {
+        'title': 'Akoho lahy',
+        'icon': Icons.pets,
+        'page': 'birds',
+      },
+      {
+        'title': 'Akohovavy',
+        'icon': Icons.egg_alt,
+        'page': 'birds',
+      },
+      {
+        'title': 'Zanak\'akoho',
+        'icon': Icons.egg,
+        'page': 'chicks',
+      },
+      {
+        'title': 'Atody',
+        'icon': Icons.breakfast_dining,
+        'page': 'eggs',
+      },
+      {
+        'title': 'Fahasalamana',
+        'icon': Icons.medical_services,
+        'page': 'health',
+      },
+      {
+        'title': 'Kalandrie',
+        'icon': Icons.calendar_month,
+        'page': 'calendar',
+      },
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF276749),
-        foregroundColor: Colors.white,
         title: const Text(
           'ROYAL FARM',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Tongasoa eto amin’ny Royal Farm',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Fitantanana sy fanaraha-maso ny fiompiana akoho.',
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                children: [
-                  FarmCard(
-                    icon: Icons.male,
-                    title: 'Akoho lahy',
-                    onTap: () => openBirds(context),
-                  ),
-                  FarmCard(
-                    icon: Icons.female,
-                    title: 'Akohovavy',
-                    onTap: () => openBirds(context),
-                  ),
-                  const FarmCard(
-                    icon: Icons.egg,
-                    title: 'Atody',
-                  ),
-                  const FarmCard(
-                    icon: Icons.child_care,
-                    title: "Zanak'akoho",
-                  ),
-                  const FarmCard(
-                    icon: Icons.medical_services,
-                    title: 'Fahasalamana',
-                  ),
-                  const FarmCard(
-                    icon: Icons.calendar_month,
-                    title: 'Kalandrie',
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+        padding: const EdgeInsets.all(16),
+        child: GridView.builder(
+          itemCount: menuItems.length,
+          gridDelegate:
+              const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.15,
+          ),
+          itemBuilder: (context, index) {
+            final item = menuItems[index];
 
-class FarmCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final VoidCallback? onTap;
+            return Card(
+              elevation: 3,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  final page = item['page'];
 
-  const FarmCard({
-    super.key,
-    required this.icon,
-    required this.title,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 42,
-              color: const Color(0xFF276749),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+                  if (page == 'birds') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const BirdsScreen(),
+                      ),
+                    );
+                  } else if (page == 'chicks') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ChicksScreen(),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '${item['title']} mbola eo am-panamboarana.',
+                        ),
+                      ),
+                    );
+                  }
+                },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      item['icon'] as IconData,
+                      size: 42,
+                      color: Colors.green,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      item['title'] as String,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
