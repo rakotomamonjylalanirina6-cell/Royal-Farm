@@ -1,4 +1,5 @@
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/bird.dart';
@@ -32,14 +33,16 @@ class _BirdsScreenState extends State<BirdsScreen> {
   }
 
   Future<void> addBird() async {
+    final idController = TextEditingController();
     final nameController = TextEditingController();
     final breedController = TextEditingController();
-    final idController = TextEditingController();
+    final fatherController = TextEditingController();
+    final motherController = TextEditingController();
     final notesController = TextEditingController();
 
     String gender = 'Lahy';
-    DateTime birthDate = DateTime.now();
     String photoPath = '';
+    DateTime birthDate = DateTime.now();
 
     await showDialog(
       context: context,
@@ -47,7 +50,7 @@ class _BirdsScreenState extends State<BirdsScreen> {
         return StatefulBuilder(
           builder: (context, updateDialog) {
             return AlertDialog(
-              title: const Text('Manampy akoho vaovao'),
+              title: const Text('Mombamomba ny akoho'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -93,12 +96,44 @@ class _BirdsScreenState extends State<BirdsScreen> {
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
+                      icon: const Icon(Icons.calendar_month),
+                      label: Text(
+                        'Daty nahaterahana: '
+                        '${birthDate.day}/${birthDate.month}/${birthDate.year}',
+                      ),
+                      onPressed: () async {
+                        final selected = await showDatePicker(
+                          context: context,
+                          initialDate: birthDate,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime.now(),
+                        );
+                        if (selected != null) {
+                          updateDialog(() => birthDate = selected);
+                        }
+                      },
+                    ),
+                    TextField(
+                      controller: fatherController,
+                      decoration: const InputDecoration(
+                        labelText: 'Anaran’ny ray',
+                      ),
+                    ),
+                    TextField(
+                      controller: motherController,
+                      decoration: const InputDecoration(
+                        labelText: 'Anaran’ny reny',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
                       icon: const Icon(Icons.photo_library),
                       label: const Text('Misafidy sary'),
                       onPressed: () async {
                         final picker = ImagePicker();
                         final image = await picker.pickImage(
                           source: ImageSource.gallery,
+                          imageQuality: 80,
                         );
                         if (image != null) {
                           updateDialog(() {
@@ -108,9 +143,18 @@ class _BirdsScreenState extends State<BirdsScreen> {
                       },
                     ),
                     if (photoPath.isNotEmpty)
-                      const Text('Voafidy ny sary'),
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Image.file(
+                          File(photoPath),
+                          height: 100,
+                          width: 100,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     TextField(
                       controller: notesController,
+                      maxLines: 3,
                       decoration: const InputDecoration(
                         labelText: 'Fanamarihana',
                       ),
@@ -137,6 +181,8 @@ class _BirdsScreenState extends State<BirdsScreen> {
                       gender: gender,
                       birthDate: birthDate,
                       entryDate: DateTime.now(),
+                      fatherId: fatherController.text.trim(),
+                      motherId: motherController.text.trim(),
                       photoPath: photoPath,
                       notes: notesController.text.trim(),
                     );
@@ -155,9 +201,11 @@ class _BirdsScreenState extends State<BirdsScreen> {
       },
     );
 
+    idController.dispose();
     nameController.dispose();
     breedController.dispose();
-    idController.dispose();
+    fatherController.dispose();
+    motherController.dispose();
     notesController.dispose();
 
     await loadBirds();
@@ -185,16 +233,31 @@ class _BirdsScreenState extends State<BirdsScreen> {
                   itemCount: birds.length,
                   itemBuilder: (context, index) {
                     final bird = birds[index];
+
                     return Card(
                       margin: const EdgeInsets.all(8),
                       child: ListTile(
-                        leading: const CircleAvatar(
-                          child: Icon(Icons.flutter_dash),
+                        leading: CircleAvatar(
+                          radius: 28,
+                          backgroundImage:
+                              bird.photoPath.isNotEmpty &&
+                                      File(bird.photoPath).existsSync()
+                                  ? FileImage(File(bird.photoPath))
+                                  : null,
+                          child: bird.photoPath.isEmpty ||
+                                  !File(bird.photoPath).existsSync()
+                              ? const Icon(Icons.flutter_dash)
+                              : null,
                         ),
                         title: Text(bird.name),
                         subtitle: Text(
-                          '${bird.id} • ${bird.breed} • ${bird.gender}',
+                          '${bird.id} • ${bird.breed}\n'
+                          '${bird.gender} • '
+                          '${bird.birthDate.day}/'
+                          '${bird.birthDate.month}/'
+                          '${bird.birthDate.year}',
                         ),
+                        isThreeLine: true,
                       ),
                     );
                   },
