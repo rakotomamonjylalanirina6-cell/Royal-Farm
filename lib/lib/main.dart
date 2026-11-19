@@ -102,12 +102,20 @@ class HomePage extends StatelessWidget {
                       ),
                     );
                   } else if (page == 'chicks') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ChicksScreen(),
-                      ),
-                    );
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const ChicksScreen(),
+    ),
+  );
+} else if (page == 'eggs') {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const EggsScreen(),
+    ),
+  );
+} else {
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
