@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'screens/birds_screen.dart';
 
 void main() {
   runApp(const RoyalFarmApp());
@@ -27,6 +28,15 @@ class RoyalFarmApp extends StatelessWidget {
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
+  void openBirds(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BirdsScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,35 +61,39 @@ class HomePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Text('Fitantanana sy fanaraha-maso ny fiompiana akoho.'),
+            const Text(
+              'Fitantanana sy fanaraha-maso ny fiompiana akoho.',
+            ),
             const SizedBox(height: 24),
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                children: const [
+                children: [
                   FarmCard(
                     icon: Icons.male,
                     title: 'Akoho lahy',
+                    onTap: () => openBirds(context),
                   ),
                   FarmCard(
                     icon: Icons.female,
                     title: 'Akohovavy',
+                    onTap: () => openBirds(context),
                   ),
-                  FarmCard(
+                  const FarmCard(
                     icon: Icons.egg,
                     title: 'Atody',
                   ),
-                  FarmCard(
+                  const FarmCard(
                     icon: Icons.child_care,
                     title: "Zanak'akoho",
                   ),
-                  FarmCard(
+                  const FarmCard(
                     icon: Icons.medical_services,
                     title: 'Fahasalamana',
                   ),
-                  FarmCard(
+                  const FarmCard(
                     icon: Icons.calendar_month,
                     title: 'Kalandrie',
                   ),
@@ -96,30 +110,40 @@ class HomePage extends StatelessWidget {
 class FarmCard extends StatelessWidget {
   final IconData icon;
   final String title;
+  final VoidCallback? onTap;
 
   const FarmCard({
     super.key,
     required this.icon,
     required this.title,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 42, color: const Color(0xFF276749)),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 42,
+              color: const Color(0xFF276749),
             ),
-          ),
-        ],
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
