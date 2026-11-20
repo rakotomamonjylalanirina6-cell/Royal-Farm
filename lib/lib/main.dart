@@ -53,7 +53,9 @@ class HomePage extends StatelessWidget {
         'icon': Icons.breakfast_dining,
         'page': 'eggs',
       },
-      {
+      {else if (page == 'santé') {
+  return const HealthScreen();
+}
         'title': 'Fahasalamana',
         'icon': Icons.medical_services,
         'page': 'health',
